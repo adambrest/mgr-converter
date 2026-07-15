@@ -3,42 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
-<title>MGR Converter</title>
+<meta name="theme-color" content="#ffffff">
+<title>Military Coordinate Converter</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#243244; --line:#334155;
-    --text:#f1f5f9; --muted:#94a3b8; --accent:#38bdf8; --accent-ink:#04283a;
-    --danger:#f87171; --ok:#34d399; --warn:#fbbf24; --to:#a78bfa;
+    --bg:#ffffff; --panel:#ffffff; --panel2:#f1f5f9; --line:#e2e8f0;
+    --text:#0f172a; --muted:#64748b; --accent:#2563eb; --accent-ink:#ffffff;
+    --danger:#dc2626; --ok:#16a34a; --warn:#d97706; --to:#7c3aed;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--text);font:500 15px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overscroll-behavior:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-  header{padding:7px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex:0 0 auto}
-  header .badge{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:800;font-size:10px}
-  header h1{margin:0;font-size:15px}
-  header h1 .ver{color:var(--muted);font-weight:500;font-size:11px;margin-left:5px}
-  .refresh{margin-left:auto;flex:0 0 auto;width:36px;height:36px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);border-radius:9px;font-size:19px;cursor:pointer;display:grid;place-items:center}
-  .refresh:active{background:var(--line)}
-  .tabs{display:flex;gap:2px;padding:6px 10px 0;flex:0 0 auto}
-  .tabs button{flex:1 1 0;min-height:38px;border:1px solid var(--line);border-bottom:none;background:var(--panel);color:var(--muted);font-weight:700;font-size:14px;border-radius:9px 9px 0 0;cursor:pointer}
+  header{padding:11px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex:0 0 auto}
+  header h1{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+  .refresh{margin-left:auto;flex:0 0 auto;width:34px;height:34px;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:8px;font-size:17px;cursor:pointer;display:grid;place-items:center}
+  .refresh:active{background:var(--panel2)}
+  .tabs{display:flex;gap:2px;margin-left:6px;flex:0 0 auto}
+  .tabs button{border:none;background:none;color:var(--muted);font-weight:600;font-size:13px;padding:5px 11px;border-radius:8px;cursor:pointer}
+  .tabs button:hover{color:var(--text)}
   .tabs button.on{background:var(--panel2);color:var(--text)}
+  .tabs button#tab-set{font-size:12px}
   main{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px}
   .view{display:none} .view.on{display:block}
 
-  /* system selectors */
-  .systems{display:grid;grid-template-columns:1fr 44px 1fr;gap:8px;align-items:center;margin-bottom:8px}
-  select.sys{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 28px 9px 10px;font-size:14px;font-weight:700;
+  /* workspace: input | convert | output */
+  .workspace{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:start;max-width:840px;margin:0 auto}
+  .side{display:flex;flex-direction:column;min-width:0}
+  .middle{display:flex;flex-direction:column;align-items:center;gap:10px;align-self:start;margin-top:60px}
+  select.sys{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 28px 9px 10px;font-size:14px;font-weight:600;margin-bottom:8px;
     background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-  .swap{height:44px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);border-radius:9px;font-size:18px;cursor:pointer}
-  .swap:active{background:var(--line)}
-  .lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin:6px 2px 4px;display:flex;align-items:center;gap:6px}
-  .lbl .dot{width:8px;height:8px;border-radius:50%}
-  .lbl.from .dot{background:var(--accent)} .lbl.to .dot{background:var(--to)}
+  .swap{width:38px;height:38px;border:1px solid var(--line);background:#fff;color:var(--accent);border-radius:9px;font-size:16px;cursor:pointer}
+  .swap:active{background:var(--panel2)}
+  .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 2px 6px}
 
   /* tables */
   .tbl{border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -47,45 +47,48 @@
   .thead span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .trow{border-top:1px solid var(--line)}
   .trow .n{color:var(--muted);font-size:11px;font-weight:700;text-align:center}
-  .cell{width:100%;min-width:0;border:1px solid transparent;background:var(--panel2);color:var(--text);border-radius:6px;padding:8px 6px;font:600 14px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
-  .cell.nm{font-family:inherit}
-  .cell:focus{outline:none;border-color:var(--accent)}
-  .cell::placeholder{color:var(--muted);font-weight:500;opacity:.65}
-  .cell.bad{border-color:var(--danger);background:rgba(248,113,113,.12)}
+  .cell{width:100%;min-width:0;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:6px;padding:8px 6px;font:600 14px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .cell.nm{font-family:inherit;font-weight:500}
+  .cell:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+  .cell::placeholder{color:var(--muted);font-weight:500;opacity:.7}
+  .cell.bad{border-color:var(--danger);background:rgba(220,38,38,.06)}
   .cell.flash{animation:flash .8s ease}
-  @keyframes flash{0%{background:rgba(56,189,248,.35)}100%{background:var(--panel2)}}
+  @keyframes flash{0%{background:rgba(37,99,235,.18)}100%{background:#fff}}
   .trow.out .cell{background:transparent;border:none;padding:8px 6px;user-select:text}
   .del{width:30px;height:34px;border:none;background:transparent;color:var(--danger);font-size:18px;border-radius:7px;cursor:pointer}
   .trow.out .del{visibility:hidden}
   .detect{font-size:11px;color:var(--muted);padding:3px 8px 6px;min-height:6px}
   .detect.warn{color:var(--warn)} .detect.err{color:var(--danger)}
 
-  .convert{width:100%;min-height:52px;margin:10px 0;border-radius:12px;border:none;background:var(--accent);color:var(--accent-ink);font-size:17px;font-weight:800;cursor:pointer}
+  .convert{min-height:46px;padding:0 22px;border-radius:10px;border:none;background:var(--accent);color:var(--accent-ink);font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgba(37,99,235,.25)}
   .convert:active{transform:translateY(1px)}
-  .exportbar{display:flex;gap:8px;margin-top:10px}
-  .exportbar button{flex:1 1 0;min-height:48px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:14px;font-weight:800;cursor:pointer}
-  .exportbar button.maps{background:var(--ok);color:#04321f;border-color:var(--ok)}
+  .convert:disabled{opacity:.45;pointer-events:none;box-shadow:none}
+  .badpair{font-size:11px;color:var(--danger);text-align:center;max-width:130px;line-height:1.4}
+  .exportbar{display:flex;gap:8px;margin-top:12px}
+  .exportbar button{flex:1 1 0;min-height:42px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
+  .exportbar button.maps{background:var(--ok);color:#fff;border-color:var(--ok)}
   .exportbar button:disabled{opacity:.4;pointer-events:none}
-  .addrow{margin-top:6px;background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:6px}
+  .addrow{align-self:flex-start;margin-top:4px;background:none;border:none;color:var(--accent);font-weight:600;font-size:13px;cursor:pointer;padding:6px 4px}
 
   /* settings */
-  .sgroup{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
-  .sgroup h3{margin:0 0 8px;font-size:14px}
-  .srow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
-  .srow .k{font-size:12px;color:var(--muted);width:100%;font-weight:700}
-  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;flex-wrap:wrap}
-  .seg button{min-height:34px;padding:0 10px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+  #view-set{max-width:560px}
+  .sgroup{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+  .sgroup h3{margin:0 0 10px;font-size:14px;font-weight:700}
+  .srow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
+  .srow .k{font-size:12px;color:var(--muted);width:100%;font-weight:600}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;flex-wrap:wrap}
+  .seg button{min-height:32px;padding:0 12px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer}
   .seg button.on{background:var(--accent);color:var(--accent-ink)}
   .example{font:600 13px ui-monospace,Menlo,monospace;color:var(--muted);background:var(--panel2);border-radius:7px;padding:8px;margin-top:4px}
   .example b{color:var(--text)}
   label.chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
   label.chk input{width:18px;height:18px}
-  .note{font-size:11px;color:var(--muted);margin-top:4px}
+  .note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
 
   /* modal */
   .overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
   .overlay.open{display:flex}
-  .modal{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .modal{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(2,6,23,.18)}
   .modal h3{margin:0 0 10px;font-size:17px}
   .modal .seg{margin-bottom:10px}
   .modal input[type=text]{width:100%;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:11px;font-size:15px;margin-bottom:6px}
@@ -96,43 +99,87 @@
 
   .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ok);color:#04321f;font-weight:800;padding:10px 18px;border-radius:999px;opacity:0;transition:all .2s;pointer-events:none;z-index:100;max-width:90%}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .toast.warn{background:var(--warn);color:#3a2c04}
+  .toast.warn{background:var(--warn);color:#fff}
+
+  /* header update indicator */
+  .topright{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .update-msg{border:none;background:var(--warn);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;cursor:pointer}
+  .update-msg[hidden]{display:none}
+
+  /* output placeholder */
+  .trow.out.placeholder .ghost{color:var(--muted);opacity:.7;font:600 13px/1 ui-monospace,Menlo,monospace;padding:8px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trow.out.placeholder .n{opacity:.5}
+
+  /* settings accordion */
+  .preset{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden}
+  .preset-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:none;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:700;color:var(--text)}
+  .preset-head:hover{background:var(--panel2)}
+  .preset.open .preset-head{border-bottom:1px solid var(--line)}
+  .pname{display:flex;align-items:center;gap:8px}
+  .chev{color:var(--muted);font-size:12px}
+  .tagu{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--warn);border:1px solid var(--warn);border-radius:5px;padding:1px 5px}
+  .preset-body{display:none;padding:12px 14px}
+  .preset.open .preset-body{display:block}
+  .basis{font-size:12px;color:var(--text);margin-bottom:6px;line-height:1.5}
+  .proj{font:500 11px/1.5 ui-monospace,Menlo,monospace;color:var(--muted);background:var(--panel2);border-radius:7px;padding:8px 10px;margin-bottom:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .hint{font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0}
+  .reset{margin-top:6px;background:none;border:1px solid var(--line);color:var(--muted);font-weight:600;font-size:12px;cursor:pointer;padding:8px 12px;border-radius:8px}
+  .reset:hover{color:var(--danger);border-color:var(--danger)}
+
+  /* mobile: stack the tables, convert sits between them */
+  @media (max-width:640px){
+    main{padding:12px}
+    .workspace{grid-template-columns:1fr;gap:12px;max-width:440px}
+    .middle{flex-direction:row;width:100%;align-self:stretch;margin-top:0}
+    .convert{flex:1 1 0}
+    .swap{flex:0 0 auto}
+  }
 </style>
 </head>
 <body>
   <header>
-    <div class="badge">MGR</div>
-    <div><h1>MGR Converter <span class="ver">v1</span></h1></div>
-    <button class="refresh" id="refresh" title="Update to latest version" aria-label="Update to latest version">↻</button>
+    <h1>Military Coordinate Converter</h1>
+    <nav class="tabs">
+      <button id="tab-conv" class="on">Converter</button>
+      <button id="tab-set">Settings</button>
+    </nav>
+    <div class="topright">
+      <button class="update-msg" id="updateMsg" title="A new version is ready — click to update" hidden>Update available</button>
+      <button class="refresh" id="refresh" title="Update to latest version" aria-label="Update to latest version">↻</button>
+    </div>
   </header>
-  <div class="tabs">
-    <button id="tab-conv" class="on">Converter</button>
-    <button id="tab-set">Settings</button>
-  </div>
 
   <main>
     <!-- CONVERTER -->
     <section class="view on" id="view-conv">
-      <div class="systems">
-        <select class="sys" id="fromSys"></select>
-        <button class="swap" id="swapBtn" title="Swap input/output">⇄</button>
-        <select class="sys" id="toSys"></select>
-      </div>
+      <div class="workspace">
+        <!-- INPUT -->
+        <div class="side">
+          <div class="lbl">From <span id="fromName" hidden></span></div>
+          <select class="sys" id="fromSys" aria-label="Input system"></select>
+          <div class="tbl"><div class="thead" id="fromHead"></div><div id="fromRows"></div></div>
+          <div class="detect" id="detect"></div>
+          <button class="addrow" id="addRow">+ Add row</button>
+        </div>
 
-      <div class="lbl from"><span class="dot"></span><span id="fromName">From</span></div>
-      <div class="tbl"><div class="thead" id="fromHead"></div><div id="fromRows"></div></div>
-      <div class="detect" id="detect"></div>
-      <button class="addrow" id="addRow">+ Add row</button>
+        <!-- CONVERT / SWAP -->
+        <div class="middle">
+          <button class="convert" id="convertBtn">Convert</button>
+          <button class="swap" id="swapBtn" title="Swap input/output" aria-label="Swap input and output">⇄</button>
+          <div class="badpair" id="badPair" hidden>Two different grids can't be converted</div>
+        </div>
 
-      <button class="convert" id="convertBtn">Convert</button>
-
-      <div class="lbl to"><span class="dot"></span><span id="toName">To</span></div>
-      <div class="tbl"><div class="thead" id="toHead"></div><div id="toRows"></div></div>
-
-      <div class="exportbar">
-        <button class="maps" id="mapsBtn" disabled>📍 Google Maps</button>
-        <button id="gpxBtn" disabled>Export GPX</button>
-        <button id="copyBtn" disabled>Copy</button>
+        <!-- OUTPUT -->
+        <div class="side">
+          <div class="lbl">To <span id="toName" hidden></span></div>
+          <select class="sys" id="toSys" aria-label="Output system"></select>
+          <div class="tbl"><div class="thead" id="toHead"></div><div id="toRows"></div></div>
+          <div class="exportbar">
+            <button class="maps" id="mapsBtn" disabled>Open in Maps</button>
+            <button id="gpxBtn" disabled>Download GPX</button>
+            <button id="copyBtn" disabled>Copy</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -172,11 +219,21 @@
   /* ============================ presets ============================ */
   // Each preset: parse(fields,settings)->{lat,lon}|{error}; format(lat,lon,settings)->[a,b]; cols; kind
   const PRESETS = {
-    wgs84:{ id:"wgs84", name:"WGS 84 Lat/Long", kind:"latlong" },
-    sg:{ id:"sg", name:"Singapore MGR", kind:"grid", epsg:"EPSG:3168", lead:[LEAD_E,LEAD_N], omitDefault:true },
-    taiwan:{ id:"taiwan", name:"Taiwan UTM (51N)", kind:"utm", epsg:"UTM51N" },
-    thailand:{ id:"thailand", name:"Thailand UTM (47N)", kind:"utm", epsg:"UTM47N" },
-    brunei:{ id:"brunei", name:"Brunei Grid *", kind:"projected", epsg:"BRUNEI" },
+    wgs84:{ id:"wgs84", name:"Global Lat/Long (WGS 84)", kind:"latlong",
+      basis:"WGS 84 geographic coordinates (EPSG:4326) — the global GPS datum.",
+      proj:"EPSG:4326 · +proj=longlat +datum=WGS84 +no_defs" },
+    sg:{ id:"sg", name:"Singapore MGR", kind:"grid", epsg:"EPSG:3168", lead:[LEAD_E,LEAD_N], omitDefault:true,
+      basis:"Kertau 1948 / RSO Malaya (Everest 1969 ellipsoid) — EPSG:3168.",
+      proj:"+proj=omerc +lat_0=4 +lonc=102.25 +alpha=323.0257905 +gamma=323.130102361111 +k=0.99984 +x_0=804670.24 +y_0=0 +ellps=evrst69 +towgs84=-11,851,5,0,0,0,0 +units=m" },
+    taiwan:{ id:"taiwan", name:"Taiwan MGR", kind:"utm", epsg:"UTM51N",
+      basis:"UTM Zone 51N on WGS 84 (EPSG:32651).",
+      proj:"+proj=utm +zone=51 +datum=WGS84 +units=m" },
+    thailand:{ id:"thailand", name:"Thailand MGR", kind:"utm", epsg:"UTM47N",
+      basis:"UTM Zone 47N on WGS 84 (EPSG:32647).",
+      proj:"+proj=utm +zone=47 +datum=WGS84 +units=m" },
+    brunei:{ id:"brunei", name:"Brunei MGR", kind:"projected", epsg:"BRUNEI", unverified:true,
+      basis:"Custom Timbalai / Borneo RSO grid — UNVERIFIED (no ground-truth check point).",
+      proj:"+proj=tmerc +lat_0=0 +lon_0=110 +k=0.997 +x_0=3901134 +y_0=898522 +ellps=evrstSS +towgs84=-678,670,-48,0,0,0,0 +units=m" },
   };
   const PRESET_ORDER = ["wgs84","sg","taiwan","thailand","brunei"];
 
@@ -210,9 +267,10 @@
       return s.order==="lonlat"?[lo,la]:[la,lo];
     }
     if(p.kind==="grid"){ const {E,N}=toProjFromWGS(lat,lon,p.epsg); return sgHalvesEN(E,N,s); }
-    // utm / projected -> full integer easting/northing
+    // utm / projected -> full easting/northing in metres (configurable decimals)
     const {E,N}=toProjFromWGS(lat,lon,p.epsg);
-    return [String(Math.round(E)), String(Math.round(N))];
+    const dec=(s.decimals|0);
+    return [E.toFixed(dec), N.toFixed(dec)];
   }
   function colsFor(presetId,S){
     const p=PRESETS[presetId], s=S[presetId]||{};
@@ -339,9 +397,11 @@
     return {
       wgs84:{ order:"latlon", format:"dd", decimals:6 },
       sg:{ sgDigits:4, sgOmit:true },
-      taiwan:{}, thailand:{}, brunei:{},
+      taiwan:{ decimals:0 }, thailand:{ decimals:0 }, brunei:{ decimals:0 },
     };
   }
+  // per-preset defaults, used by the settings Reset button
+  function defaultsFor(id){ return defaultSettings()[id] || {}; }
 
   /* ============================ expose for tests ============================ */
   if(typeof module!=="undefined"){ module.exports={ parseLatLon,splitGrid,sgToWGS,parseCells,formatPoint,generateGpx,xmlEsc,safeFilename,routeUrl,PRESETS,defaultSettings }; }
@@ -365,60 +425,108 @@
     function detect(msg,cls){ const d=$("#detect"); d.textContent=msg||""; d.className="detect"+(cls?" "+cls:""); }
     function toast(msg,warn){ const t=$("#toast"); t.textContent=msg; t.className="toast show"+(warn?" warn":""); clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="toast",1600); }
 
+    let splitTimer=null;
     /* ---- render FROM table ---- */
     function renderFrom(){
       const cols=colsFor(state.from,state.settings);
       $("#fromName").textContent=PRESETS[state.from].name;
       $("#fromHead").innerHTML=`<span>#</span><span>${cols[0]}</span><span>${cols[1]}</span><span>Name</span><span></span>`;
-      const smart = PRESETS[state.from].kind==="grid" || PRESETS[state.from].kind==="latlong"; // smart paste on for SG + latlong only
+      const smart = PRESETS[state.from].kind==="grid" || PRESETS[state.from].kind==="latlong"; // smart paste + split on for grid + latlong
       const rowsEl=$("#fromRows"); rowsEl.innerHTML="";
       state.rows.forEach((r,i)=>{
         const div=document.createElement("div"); div.className="trow"; div.dataset.i=i;
+        const canDelete = state.rows.length>1;   // never show a delete on the sole row
         div.innerHTML=`<span class="n">${i+1}</span>`+
           `<input class="cell a" value="${escAttr(r[0])}" placeholder="${escAttr(cols[0])}">`+
           `<input class="cell b" value="${escAttr(r[1])}" placeholder="${escAttr(cols[1])}">`+
           `<input class="cell nm" value="${escAttr(r[2])}" placeholder="name">`+
-          `<button class="del" aria-label="Delete row">✕</button>`;
+          (canDelete?`<button class="del" aria-label="Delete row">✕</button>`:`<span></span>`);
         rowsEl.appendChild(div);
-        div.querySelector(".del").addEventListener("click",()=>{ state.rows.splice(i,1); if(!state.rows.length)state.rows.push(["","",""]); syncRows(); renderFrom(); save(); });
+        const delEl=div.querySelector(".del");
+        if(delEl) delEl.addEventListener("click",()=>{ readRows(); state.rows.splice(i,1); if(!state.rows.length)state.rows.push(["","",""]); renderFrom(); save(); });
         const A=div.querySelector(".a"),B=div.querySelector(".b"),NM=div.querySelector(".nm");
         [A,B,NM].forEach(inp=>inp.addEventListener("input",()=>{ readRows(); save(); }));
         [A,B].forEach(inp=>inp.addEventListener("blur",()=>{ inp.classList.remove("bad"); }));
-        if(smart){ [A,B].forEach(inp=>inp.addEventListener("paste",e=>onPaste(e,i,inp,A,B))); }
+        // Enter starts a new row and focuses it
+        [A,B,NM].forEach(inp=>inp.addEventListener("keydown",e=>{
+          if(e.key==="Enter"){ e.preventDefault(); readRows(); state.rows.splice(i+1,0,["","",""]); renderFrom(); const nx=$("#fromRows").children[i+1]; if(nx) nx.querySelector(".a").focus(); save(); }
+        }));
+        if(smart){
+          [A,B].forEach(inp=>inp.addEventListener("paste",e=>onPaste(e,i,A,B)));
+          // after a pause, if a whole coordinate landed in the first box, split it out
+          A.addEventListener("input",()=>{ clearTimeout(splitTimer); splitTimer=setTimeout(()=>maybeSplit(i,A,B),700); });
+        }
       });
     }
     function escAttr(s){ return String(s==null?"":s).replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
     function readRows(){ state.rows=[...$("#fromRows").children].map(d=>[d.querySelector(".a").value,d.querySelector(".b").value,d.querySelector(".nm").value]); }
     function syncRows(){ readRows(); }
 
-    /* ---- paste autodetect ---- */
-    function onPaste(e,i,inp,A,B){
+    /* ---- smart paste + auto-split ---- */
+    function llCells(lat,lon){ const S=state.settings.wgs84; const la=fmtLat(lat,S), lo=fmtLon(lon,S); return S.order==="lonlat"?[lo,la]:[la,lo]; }
+    // parse a pasted block: one point per line; components split by space / comma / tab
+    function parseBlock(text){
+      const p=PRESETS[state.from];
+      const lines=String(text).replace(/\r/g,"").split("\n").map(s=>s.trim()).filter(Boolean);
+      const out=[]; let bad=0, warn=null, label=null;
+      for(const line of lines){
+        if(p.kind==="latlong"){
+          const r=parseLatLon(line, state.settings.wgs84.order==="lonlat"?"lonlat":"latlon");
+          if(r.error){ bad++; continue; }
+          out.push(llCells(r.lat,r.lon)); if(r.warning) warn=r.warning; label=r.detected;
+        } else if(p.kind==="grid"){
+          const g=splitGrid(line);
+          if(g.error){ bad++; continue; }
+          out.push([g.e,g.n]); label=`${g.d}+${g.d} grid reference`;
+        } else { bad++; }
+      }
+      return {rows:out,bad,warn,label};
+    }
+    function onPaste(e,i,A,B){
       const text=(e.clipboardData||window.clipboardData).getData("text");
       if(!text) return;
       const p=PRESETS[state.from];
-      if(p.kind==="latlong"){
-        const r=parseLatLon(text, (state.settings.wgs84.order==="lonlat")?"lonlat":"latlon");
-        if(r.error){ detect("Latitude/longitude format not recognised.","err"); return; } // keep original
-        e.preventDefault();
-        // place per display order
-        const ord=state.settings.wgs84.order;
-        const cellsVals = ord==="lonlat" ? [fmtLon(r.lon,state.settings.wgs84),fmtLat(r.lat,state.settings.wgs84)] : [fmtLat(r.lat,state.settings.wgs84),fmtLon(r.lon,state.settings.wgs84)];
-        setPair(A,B,cellsVals[0],cellsVals[1]);
-        detect("Detected: "+r.detected+(r.warning?(" — "+r.warning):""), r.warning?"warn":"");
-        readRows(); save();
-      } else if(p.kind==="grid"){
-        const g=splitGrid(text);
-        if(g.error){ detect("Enter matching easting and northing groups, such as 1234 5678.","err"); return; }
-        e.preventDefault();
-        setPair(A,B,g.e,g.n);
-        detect(`Detected: ${g.d}+${g.d} grid reference`,"");
-        readRows(); save();
+      if(p.kind!=="latlong" && p.kind!=="grid") return;
+      const res=parseBlock(text);
+      if(!res.rows.length){ detect(p.kind==="grid"?"Enter matching easting and northing, such as 1234 5678.":"Latitude/longitude format not recognised.","err"); return; }
+      e.preventDefault();
+      readRows();
+      res.rows.forEach((cells,k)=>{
+        const idx=i+k;
+        if(idx>=state.rows.length) state.rows.push(["","",""]);
+        const name=state.rows[idx][2]||"";
+        state.rows[idx]=[cells[0],cells[1],name];
+      });
+      renderFrom(); flashRows(i,res.rows.length);
+      const n=res.rows.length;
+      const msg = n>1 ? `Detected ${n} points${res.bad?` · ${res.bad} line(s) skipped`:""}` : `Detected: ${res.label||"coordinate"}${res.warn?" — "+res.warn:""}`;
+      detect(msg, (res.warn||res.bad)?"warn":"");
+      save();
+    }
+    function maybeSplit(i,A,B){
+      if(B.value.trim()!=="") return;                    // never overwrite a filled second box
+      const p=PRESETS[state.from], v=A.value.trim();
+      if(p.kind==="grid"){
+        const hasSep=/[\s,;\/]/.test(v), pureEven=/^\d+$/.test(v)&&v.length%2===0&&v.length>=6;
+        if(!hasSep && !pureEven) return;
+        const g=splitGrid(v); if(g.error) return;
+        A.value=g.e; B.value=g.n; readRows(); save(); flashRows(i,1);
+        detect(`Split into ${g.d}+${g.d} grid reference`,"");
+      } else if(p.kind==="latlong"){
+        const r=parseLatLon(v, state.settings.wgs84.order==="lonlat"?"lonlat":"latlon");
+        if(r.error) return;
+        const [a,b]=llCells(r.lat,r.lon); A.value=a; B.value=b; readRows(); save(); flashRows(i,1);
+        detect("Split: "+(r.detected||"coordinate")+(r.warning?" — "+r.warning:""), r.warning?"warn":"");
       }
     }
-    function setPair(A,B,va,vb){ A.value=va; B.value=vb; A.classList.add("flash"); B.classList.add("flash"); setTimeout(()=>{A.classList.remove("flash");B.classList.remove("flash");},800); }
+    function flashRows(start,count){
+      const rows=$("#fromRows").children;
+      for(let k=0;k<count;k++){ const el=rows[start+k]; if(!el) continue; const A=el.querySelector(".a"),B=el.querySelector(".b"); A&&A.classList.add("flash"); B&&B.classList.add("flash"); setTimeout(()=>{A&&A.classList.remove("flash");B&&B.classList.remove("flash");},800); }
+    }
 
     /* ---- convert ---- */
     function convert(){
+      if(pairInvalid()){ detect("Two different grids can't be converted — set one side to Global Lat/Long.","err"); return; }
       readRows();
       const pts=[]; let bad=false;
       const rowsEl=$("#fromRows").children;
@@ -443,7 +551,13 @@
       $("#toName").textContent=PRESETS[state.to].name;
       $("#toHead").innerHTML=`<span>#</span><span>${cols[0]}</span><span>${cols[1]}</span><span>Name</span><span></span>`;
       const rowsEl=$("#toRows"); rowsEl.innerHTML="";
-      (state.points||[]).forEach((p,i)=>{
+      const pts=state.points||[];
+      if(!pts.length){
+        const ph=document.createElement("div"); ph.className="trow out placeholder";
+        ph.innerHTML=`<span class="n"></span><span class="ghost">—</span><span class="ghost">—</span><span class="ghost"></span><span></span>`;
+        rowsEl.appendChild(ph);
+      }
+      pts.forEach((p,i)=>{
         const [a,b]=formatPoint(p.lat,p.lon,state.to,state.settings);
         const div=document.createElement("div"); div.className="trow out";
         div.innerHTML=`<span class="n">${i+1}</span>`+
@@ -453,7 +567,7 @@
           `<button class="del"></button>`;
         rowsEl.appendChild(div);
       });
-      const has=(state.points||[]).length>0;
+      const has=pts.length>0;
       $("#mapsBtn").disabled=!has; $("#gpxBtn").disabled=!has; $("#copyBtn").disabled=!has;
     }
 
@@ -465,11 +579,16 @@
       state.from=nf; state.to=nt;
       $("#fromSys").value=nf; $("#toSys").value=nt;
       if(pts.length){ state.rows=pts.map(p=>{ const [a,b]=formatPoint(p.lat,p.lon,nf,state.settings); return [a,b,p.name||""]; }); }
-      state.points=[]; renderFrom(); renderTo(); detect(""); save();
+      state.points=[]; renderFrom(); renderTo(); updatePairState(); detect(""); save();
     });
 
-    $("#fromSys").addEventListener("change",e=>{ state.from=e.target.value; state.rows=[["","",""]]; state.points=[]; renderFrom(); renderTo(); detect(""); save(); });
-    $("#toSys").addEventListener("change",e=>{ state.to=e.target.value; if(state.points&&state.points.length) renderTo(); else renderTo(); save(); });
+    // Any dropdown combination is allowed (so the user can freely re-pick from/to); only the Convert
+    // button is blocked when the pair is meaningless: two DIFFERENT grids. Same system passes through.
+    function isGrid(id){ return PRESETS[id].kind!=="latlong"; }
+    function pairInvalid(){ return isGrid(state.from) && isGrid(state.to) && state.from!==state.to; }
+    function updatePairState(){ const bad=pairInvalid(); $("#convertBtn").disabled=bad; const bp=$("#badPair"); if(bp) bp.hidden=!bad; return bad; }
+    $("#fromSys").addEventListener("change",()=>{ state.from=$("#fromSys").value; state.rows=[["","",""]]; state.points=[]; renderFrom(); renderTo(); updatePairState(); detect(""); save(); });
+    $("#toSys").addEventListener("change",()=>{ state.to=$("#toSys").value; if(pairInvalid()) state.points=[]; renderTo(); updatePairState(); detect(""); save(); });
     $("#addRow").addEventListener("click",()=>{ readRows(); state.rows.push(["","",""]); renderFrom(); save(); });
     $("#convertBtn").addEventListener("click",convert);
 
@@ -515,30 +634,49 @@
       if(t==="set") renderSettings();
     }
 
-    /* ---- settings ---- */
+    /* ---- settings: per-preset accordion ---- */
+    let openPreset = null;
     function renderSettings(){
       const S=state.settings; const el=$("#view-set");
       const seg=(opts,cur,cb)=>{ const id="seg"+Math.random().toString(36).slice(2); setTimeout(()=>{ const g=document.getElementById(id); if(!g)return; g.addEventListener("click",e=>{const b=e.target.closest("button"); if(!b)return; [...g.children].forEach(x=>x.classList.toggle("on",x===b)); cb(b.dataset.v); }); },0); return `<div class="seg" id="${id}">${opts.map(o=>`<button data-v="${o[0]}" class="${String(cur)===String(o[0])?"on":""}">${o[1]}</button>`).join("")}</div>`; };
+      // editable controls, limited to what each preset allows
+      const controls=(id)=>{
+        const p=PRESETS[id], s=S[id]; let h="";
+        if(p.kind==="latlong"){
+          h+=`<div class="srow"><span class="k">Axis order (flip)</span>${seg([["latlon","Lat, Long"],["lonlat","Long, Lat"]],s.order,v=>{s.order=v;save();refreshTables();renderSettings();})}</div>`;
+          h+=`<div class="srow"><span class="k">Format</span>${seg([["dd","Decimal"],["ddm","Deg + Min"],["dms","D M S"]],s.format,v=>{s.format=v;save();refreshTables();renderSettings();})}</div>`;
+          h+=`<div class="srow"><span class="k">Decimal places <span class="hint">6 ≈ 0.1 m</span></span>${seg([[4,"4"],[5,"5"],[6,"6"],[7,"7"]],s.decimals,v=>{s.decimals=+v;save();refreshTables();renderSettings();})}</div>`;
+          const la=fmtLat(1.352083,s),lo=fmtLon(103.819836,s);
+          h+=`<div class="example">Example&nbsp; <b>${s.order==="lonlat"?lo+"&nbsp;&nbsp;&nbsp;"+la:la+"&nbsp;&nbsp;&nbsp;"+lo}</b></div>`;
+        } else if(p.kind==="grid"){
+          h+=`<div class="srow"><span class="k">Precision (digits per axis)</span>${seg([[5,"5 · 1 m"],[4,"4 · 10 m"],[3,"3 · 100 m"],[2,"2 · 1 km"]],s.sgDigits,v=>{s.sgDigits=+v;save();refreshTables();renderSettings();})}</div>`;
+          const omId="om_"+id;
+          h+=`<label class="chk"><input type="checkbox" id="${omId}" ${s.sgOmit?"checked":""}> Omit leading grid digit</label>`;
+          setTimeout(()=>{ const c=document.getElementById(omId); if(c) c.addEventListener("change",e=>{ s.sgOmit=e.target.checked; save(); refreshTables(); renderSettings(); }); },0);
+          const [ea,nb]=sgHalvesEN(634821,152074,s);
+          h+=`<div class="example">Underlying 34821 52074 →&nbsp; <b>${ea} ${nb}</b></div>`;
+        } else { // utm / projected
+          h+=`<div class="srow"><span class="k">Precision (metres)</span>${seg([[0,"1 m"],[1,"10 cm"],[2,"1 cm"],[3,"1 mm"]],s.decimals,v=>{s.decimals=+v;save();refreshTables();renderSettings();})}</div>`;
+          h+=`<div class="note">Full projected easting / northing in metres, no zone code.</div>`;
+        }
+        return h;
+      };
       let html="";
-      // WGS84
-      html+=`<div class="sgroup"><h3>WGS 84 Lat/Long</h3>`;
-      html+=`<div class="srow"><span class="k">Order</span>${seg([["latlon","Lat, Long"],["lonlat","Long, Lat"]],S.wgs84.order,v=>{S.wgs84.order=v;save();refreshTables();})}</div>`;
-      html+=`<div class="srow"><span class="k">Format</span>${seg([["dd","Decimal"],["ddm","Deg + Min"],["dms","D M S"]],S.wgs84.format,v=>{S.wgs84.format=v;save();refreshTables();updateWgsExample();})}</div>`;
-      html+=`<div class="srow"><span class="k">Decimal places (decimal format)</span>${seg([[4,"4"],[5,"5"],[6,"6"],[7,"7"]],S.wgs84.decimals,v=>{S.wgs84.decimals=+v;save();refreshTables();updateWgsExample();})}</div>`;
-      html+=`<div class="example" id="wgsEx"></div></div>`;
-      // Singapore
-      html+=`<div class="sgroup"><h3>Singapore MGR</h3>`;
-      html+=`<div class="srow"><span class="k">Digits per axis (precision)</span>${seg([[5,"5 (1 m)"],[4,"4 (10 m)"],[3,"3 (100 m)"],[2,"2 (1 km)"]],S.sg.sgDigits,v=>{S.sg.sgDigits=+v;save();refreshTables();updateSgExample();})}</div>`;
-      html+=`<label class="chk"><input type="checkbox" id="sgOmit" ${S.sg.sgOmit?"checked":""}> Omit leading grid digit</label>`;
-      html+=`<div class="example" id="sgEx"></div></div>`;
-      // UTM / Brunei
-      html+=`<div class="sgroup"><h3>Taiwan / Thailand / Brunei</h3><div class="note">Reported as full projected easting / northing (integer metres), no zone code. Taiwan = UTM 51N, Thailand = UTM 47N. Brunei is a custom Timbalai grid <b>*unverified</b> (no ground-truth check point).</div></div>`;
+      PRESET_ORDER.forEach(id=>{
+        const p=PRESETS[id], open=(openPreset===id);
+        html+=`<div class="preset${open?" open":""}" data-id="${id}">`;
+        html+=`<button class="preset-head" data-head="${id}"><span class="pname">${p.name}${p.unverified?' <span class="tagu">unverified</span>':''}</span><span class="chev">${open?"▾":"▸"}</span></button>`;
+        html+=`<div class="preset-body">`;
+        html+=`<div class="basis">Based on: ${p.basis}</div>`;
+        html+=`<div class="proj">${escAttr(p.proj)}</div>`;
+        html+=controls(id);
+        html+=`<button class="reset" data-reset="${id}">↺ Reset ${p.name} to defaults</button>`;
+        html+=`</div></div>`;
+      });
       el.innerHTML=html;
-      $("#sgOmit").addEventListener("change",e=>{ S.sg.sgOmit=e.target.checked; save(); refreshTables(); updateSgExample(); });
-      updateWgsExample(); updateSgExample();
+      el.querySelectorAll(".preset-head").forEach(btn=>btn.addEventListener("click",()=>{ const id=btn.dataset.head; openPreset=(openPreset===id)?null:id; renderSettings(); }));
+      el.querySelectorAll(".reset").forEach(btn=>btn.addEventListener("click",()=>{ const id=btn.dataset.reset; state.settings[id]=defaultsFor(id); save(); refreshTables(); renderSettings(); toast(PRESETS[id].name+" reset"); }));
     }
-    function updateWgsExample(){ const S=state.settings.wgs84; const ex=document.getElementById("wgsEx"); if(!ex)return; const la=fmtLat(1.352083,S),lo=fmtLon(103.819836,S); ex.innerHTML="Example: <b>"+(S.order==="lonlat"?lo+"   "+la:la+"   "+lo)+"</b>"; }
-    function updateSgExample(){ const S=state.settings.sg; const ex=document.getElementById("sgEx"); if(!ex)return; const [a,b]=sgHalvesEN(634821,152074,S); ex.innerHTML="Underlying 34821 52074 → <b>"+a+" "+b+"</b>"; }
 
     function refreshTables(){ renderFrom(); if(state.points&&state.points.length) renderTo(); }
 
@@ -550,10 +688,22 @@
     });
     if(location.search.includes("fresh=")){ const u=new URL(location.href); u.searchParams.delete("fresh"); history.replaceState(null,"",u.pathname+u.search+u.hash); }
 
-    if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+    function showUpdate(){ const m=$("#updateMsg"); if(m) m.hidden=false; }
+    $("#updateMsg").addEventListener("click",()=>$("#refresh").click());
+    if("serviceWorker" in navigator){
+      window.addEventListener("load",()=>{
+        navigator.serviceWorker.register("sw.js").then(reg=>{
+          if(reg.waiting && navigator.serviceWorker.controller) showUpdate();
+          reg.addEventListener("updatefound",()=>{
+            const nw=reg.installing; if(!nw) return;
+            nw.addEventListener("statechange",()=>{ if(nw.state==="installed" && navigator.serviceWorker.controller) showUpdate(); });
+          });
+        }).catch(()=>{});
+      });
+    }
 
     // initial render
-    renderFrom(); renderTo();
+    renderFrom(); renderTo(); updatePairState();
   })();
   </script>
 </body>
