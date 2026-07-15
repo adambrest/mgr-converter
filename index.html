@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>MGR Converter</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#243244; --line:#334155;
+    --text:#f1f5f9; --muted:#94a3b8; --accent:#38bdf8; --accent-ink:#04283a;
+    --danger:#f87171; --ok:#34d399; --warn:#fbbf24; --to:#a78bfa;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font:500 15px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overscroll-behavior:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  header{padding:7px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  header .badge{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:800;font-size:10px}
+  header h1{margin:0;font-size:15px}
+  header h1 .ver{color:var(--muted);font-weight:500;font-size:11px;margin-left:5px}
+  .refresh{margin-left:auto;flex:0 0 auto;width:36px;height:36px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);border-radius:9px;font-size:19px;cursor:pointer;display:grid;place-items:center}
+  .refresh:active{background:var(--line)}
+  .tabs{display:flex;gap:2px;padding:6px 10px 0;flex:0 0 auto}
+  .tabs button{flex:1 1 0;min-height:38px;border:1px solid var(--line);border-bottom:none;background:var(--panel);color:var(--muted);font-weight:700;font-size:14px;border-radius:9px 9px 0 0;cursor:pointer}
+  .tabs button.on{background:var(--panel2);color:var(--text)}
+  main{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px}
+  .view{display:none} .view.on{display:block}
+
+  /* system selectors */
+  .systems{display:grid;grid-template-columns:1fr 44px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+  select.sys{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 28px 9px 10px;font-size:14px;font-weight:700;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  .swap{height:44px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);border-radius:9px;font-size:18px;cursor:pointer}
+  .swap:active{background:var(--line)}
+  .lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin:6px 2px 4px;display:flex;align-items:center;gap:6px}
+  .lbl .dot{width:8px;height:8px;border-radius:50%}
+  .lbl.from .dot{background:var(--accent)} .lbl.to .dot{background:var(--to)}
+
+  /* tables */
+  .tbl{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .thead,.trow{display:grid;grid-template-columns:22px 1fr 1fr 1.05fr 30px;gap:5px;align-items:center;padding:5px 6px}
+  .thead{background:var(--panel);color:var(--muted);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+  .thead span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trow{border-top:1px solid var(--line)}
+  .trow .n{color:var(--muted);font-size:11px;font-weight:700;text-align:center}
+  .cell{width:100%;min-width:0;border:1px solid transparent;background:var(--panel2);color:var(--text);border-radius:6px;padding:8px 6px;font:600 14px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .cell.nm{font-family:inherit}
+  .cell:focus{outline:none;border-color:var(--accent)}
+  .cell::placeholder{color:var(--muted);font-weight:500;opacity:.65}
+  .cell.bad{border-color:var(--danger);background:rgba(248,113,113,.12)}
+  .cell.flash{animation:flash .8s ease}
+  @keyframes flash{0%{background:rgba(56,189,248,.35)}100%{background:var(--panel2)}}
+  .trow.out .cell{background:transparent;border:none;padding:8px 6px;user-select:text}
+  .del{width:30px;height:34px;border:none;background:transparent;color:var(--danger);font-size:18px;border-radius:7px;cursor:pointer}
+  .trow.out .del{visibility:hidden}
+  .detect{font-size:11px;color:var(--muted);padding:3px 8px 6px;min-height:6px}
+  .detect.warn{color:var(--warn)} .detect.err{color:var(--danger)}
+
+  .convert{width:100%;min-height:52px;margin:10px 0;border-radius:12px;border:none;background:var(--accent);color:var(--accent-ink);font-size:17px;font-weight:800;cursor:pointer}
+  .convert:active{transform:translateY(1px)}
+  .exportbar{display:flex;gap:8px;margin-top:10px}
+  .exportbar button{flex:1 1 0;min-height:48px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:14px;font-weight:800;cursor:pointer}
+  .exportbar button.maps{background:var(--ok);color:#04321f;border-color:var(--ok)}
+  .exportbar button:disabled{opacity:.4;pointer-events:none}
+  .addrow{margin-top:6px;background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:6px}
+
+  /* settings */
+  .sgroup{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+  .sgroup h3{margin:0 0 8px;font-size:14px}
+  .srow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+  .srow .k{font-size:12px;color:var(--muted);width:100%;font-weight:700}
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;flex-wrap:wrap}
+  .seg button{min-height:34px;padding:0 10px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:var(--accent-ink)}
+  .example{font:600 13px ui-monospace,Menlo,monospace;color:var(--muted);background:var(--panel2);border-radius:7px;padding:8px;margin-top:4px}
+  .example b{color:var(--text)}
+  label.chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+  label.chk input{width:18px;height:18px}
+  .note{font-size:11px;color:var(--muted);margin-top:4px}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay.open{display:flex}
+  .modal{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .modal h3{margin:0 0 10px;font-size:17px}
+  .modal .seg{margin-bottom:10px}
+  .modal input[type=text]{width:100%;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:11px;font-size:15px;margin-bottom:6px}
+  .modal .m-actions{display:flex;gap:8px;margin-top:8px}
+  .modal .m-actions button{flex:1 1 0;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-weight:800;cursor:pointer}
+  .modal .m-actions button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .modal .m-actions button:disabled{opacity:.4;pointer-events:none}
+
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ok);color:#04321f;font-weight:800;padding:10px 18px;border-radius:999px;opacity:0;transition:all .2s;pointer-events:none;z-index:100;max-width:90%}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.warn{background:var(--warn);color:#3a2c04}
+</style>
+</head>
+<body>
+  <header>
+    <div class="badge">MGR</div>
+    <div><h1>MGR Converter <span class="ver">v1</span></h1></div>
+    <button class="refresh" id="refresh" title="Update to latest version" aria-label="Update to latest version">↻</button>
+  </header>
+  <div class="tabs">
+    <button id="tab-conv" class="on">Converter</button>
+    <button id="tab-set">Settings</button>
+  </div>
+
+  <main>
+    <!-- CONVERTER -->
+    <section class="view on" id="view-conv">
+      <div class="systems">
+        <select class="sys" id="fromSys"></select>
+        <button class="swap" id="swapBtn" title="Swap input/output">⇄</button>
+        <select class="sys" id="toSys"></select>
+      </div>
+
+      <div class="lbl from"><span class="dot"></span><span id="fromName">From</span></div>
+      <div class="tbl"><div class="thead" id="fromHead"></div><div id="fromRows"></div></div>
+      <div class="detect" id="detect"></div>
+      <button class="addrow" id="addRow">+ Add row</button>
+
+      <button class="convert" id="convertBtn">Convert</button>
+
+      <div class="lbl to"><span class="dot"></span><span id="toName">To</span></div>
+      <div class="tbl"><div class="thead" id="toHead"></div><div id="toRows"></div></div>
+
+      <div class="exportbar">
+        <button class="maps" id="mapsBtn" disabled>📍 Google Maps</button>
+        <button id="gpxBtn" disabled>Export GPX</button>
+        <button id="copyBtn" disabled>Copy</button>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-set"></section>
+  </main>
+
+  <!-- GPX modal -->
+  <div class="overlay" id="gpxOverlay">
+    <div class="modal">
+      <h3>Export GPX</h3>
+      <div class="seg" id="gpxMode">
+        <button data-m="points" class="on">Points</button>
+        <button data-m="route">Route</button>
+      </div>
+      <input type="text" id="gpxName" placeholder="Name (required)" autocomplete="off">
+      <div class="note" id="gpxNote"></div>
+      <div class="m-actions">
+        <button id="gpxCancel">Cancel</button>
+        <button id="gpxDownload" class="primary">Download GPX</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="proj4.js"></script>
+  <script>
+  "use strict";
+  /* ============================ projections ============================ */
+  proj4.defs("EPSG:3168","+proj=omerc +no_uoff +lat_0=4 +lonc=102.25 +alpha=323.0257905 +gamma=323.130102361111 +k=0.99984 +x_0=804670.24 +y_0=0 +ellps=evrst69 +towgs84=-11,851,5,0,0,0,0 +units=m +no_defs");
+  proj4.defs("UTM51N","+proj=utm +zone=51 +datum=WGS84 +units=m +no_defs");
+  proj4.defs("UTM47N","+proj=utm +zone=47 +datum=WGS84 +units=m +no_defs");
+  proj4.defs("BRUNEI","+proj=tmerc +lat_0=0 +lon_0=110 +k=0.997 +x_0=3901134 +y_0=898522 +ellps=evrstSS +towgs84=-678,670,-48,0,0,0,0 +units=m +no_defs");
+  const LEAD_E=6, LEAD_N=1; // Singapore
+
+  /* ============================ presets ============================ */
+  // Each preset: parse(fields,settings)->{lat,lon}|{error}; format(lat,lon,settings)->[a,b]; cols; kind
+  const PRESETS = {
+    wgs84:{ id:"wgs84", name:"WGS 84 Lat/Long", kind:"latlong" },
+    sg:{ id:"sg", name:"Singapore MGR", kind:"grid", epsg:"EPSG:3168", lead:[LEAD_E,LEAD_N], omitDefault:true },
+    taiwan:{ id:"taiwan", name:"Taiwan UTM (51N)", kind:"utm", epsg:"UTM51N" },
+    thailand:{ id:"thailand", name:"Thailand UTM (47N)", kind:"utm", epsg:"UTM47N" },
+    brunei:{ id:"brunei", name:"Brunei Grid *", kind:"projected", epsg:"BRUNEI" },
+  };
+  const PRESET_ORDER = ["wgs84","sg","taiwan","thailand","brunei"];
+
+  /* ============================ formatting ============================ */
+  function fmtDecWGS(v,isLat,dec){ const h=isLat?(v>=0?"N":"S"):(v>=0?"E":"W"); return `${Math.abs(v).toFixed(dec)}° ${h}`; }
+  function fmtDDM(v,isLat){ const h=isLat?(v>=0?"N":"S"):(v>=0?"E":"W"); let x=Math.abs(v),d=Math.floor(x),m=(x-d)*60; if(Math.round(m*1000)/1000>=60){m-=60;d++;} return `${d}° ${m.toFixed(3)}' ${h}`; }
+  function fmtDMS(v,isLat){ const h=isLat?(v>=0?"N":"S"):(v>=0?"E":"W"); let x=Math.abs(v),d=Math.floor(x),mf=(x-d)*60,m=Math.floor(mf),s=(mf-m)*60,sr=Math.round(s*1000)/1000; if(sr>=60){sr-=60;m++;} if(m>=60){m-=60;d++;} return `${d}°${String(m).padStart(2,"0")}'${sr.toFixed(3)}"${h}`; }
+  function fmtLat(v,s){ return s.format==="dms"?fmtDMS(v,true):s.format==="ddm"?fmtDDM(v,true):fmtDecWGS(v,true,s.decimals); }
+  function fmtLon(v,s){ return s.format==="dms"?fmtDMS(v,false):s.format==="ddm"?fmtDDM(v,false):fmtDecWGS(v,false,s.decimals); }
+
+  function sgHalvesEN(E,N,s){
+    s=s||{}; const d=s.sgDigits||4, step=Math.pow(10,5-d);
+    const Er=Math.round(E*1000)/1000, Nr=Math.round(N*1000)/1000;
+    if(s.sgOmit===false){ // show full easting/northing (leading digit kept)
+      return [String(Math.floor(Er/step)), String(Math.floor(Nr/step))];
+    }
+    const e=Math.floor((Er-600000)/step), n=Math.floor((Nr-100000)/step); // leading 6/1 omitted
+    const max=Math.pow(10,d)-1;
+    if(e<0||e>max||n<0||n>max) return ["————","————"];
+    return [String(e).padStart(d,"0"), String(n).padStart(d,"0")];
+  }
+
+  function toWGSfromProj(E,N,epsg){ const r=proj4(epsg,"WGS84",[E,N]); return {lon:r[0],lat:r[1]}; }
+  function toProjFromWGS(lat,lon,epsg){ const r=proj4("WGS84",epsg,[lon,lat]); return {E:r[0],N:r[1]}; }
+
+  // format a WGS84 point into the display cells of a preset
+  function formatPoint(lat,lon,presetId,S){
+    const p=PRESETS[presetId], s=S[presetId]||{};
+    if(p.kind==="latlong"){
+      const la=fmtLat(lat,s), lo=fmtLon(lon,s);
+      return s.order==="lonlat"?[lo,la]:[la,lo];
+    }
+    if(p.kind==="grid"){ const {E,N}=toProjFromWGS(lat,lon,p.epsg); return sgHalvesEN(E,N,s); }
+    // utm / projected -> full integer easting/northing
+    const {E,N}=toProjFromWGS(lat,lon,p.epsg);
+    return [String(Math.round(E)), String(Math.round(N))];
+  }
+  function colsFor(presetId,S){
+    const p=PRESETS[presetId], s=S[presetId]||{};
+    if(p.kind==="latlong") return s.order==="lonlat"?["Longitude","Latitude"]:["Latitude","Longitude"];
+    return ["Easting","Northing"];
+  }
+
+  /* ============================ parsing ============================ */
+  // ---- lat/long pair parser (paste). preferredOrder: 'latlon'|'lonlat'
+  function parseLatLon(text, preferredOrder){
+    const raw=String(text).trim(); if(!raw) return {error:"empty"};
+    const norm=raw.replace(/[，]/g,",").replace(/[°º]/g,"°");
+    const re=/([NSEW])?\s*(-?\d+(?:\.\d+)?)\s*°?\s*(?:(\d+(?:\.\d+)?)\s*['′])?\s*(?:(\d+(?:\.\d+)?)\s*["″])?\s*([NSEW])?/gi;
+    const comps=[]; let m;
+    while((m=re.exec(norm)) && comps.length<4){
+      if(!m[2]) { if(re.lastIndex===m.index) re.lastIndex++; continue; }
+      const deg=parseFloat(m[2]), min=m[3]?parseFloat(m[3]):0, sec=m[4]?parseFloat(m[4]):0;
+      let val=Math.abs(deg)+min/60+sec/3600;
+      const neg=/^-/.test(m[2]);
+      const card=(m[1]||m[5]||"").toUpperCase();
+      comps.push({val,neg,card,hasMinSec:!!(m[3]||m[4])});
+    }
+    if(comps.length<2) return {error:"need two coordinates"};
+    const a=comps[0], b=comps[1];
+    let lat, lon, warning, confidence="certain";
+    const applyCard=(c)=>{ if(c.card==="N")return{lat:c.val}; if(c.card==="S")return{lat:-c.val}; if(c.card==="E")return{lon:c.val}; if(c.card==="W")return{lon:-c.val}; return {}; };
+    if(a.card||b.card){
+      for(const c of [a,b]){ const r=applyCard(c); if(r.lat!==undefined)lat=r.lat; if(r.lon!==undefined)lon=r.lon;
+        if(c.card && ((c.card==="N"||c.card==="S")===false && (c.card==="E"||c.card==="W")===false)){} }
+      // sign/cardinal conflict note
+      for(const c of [a,b]){ if(c.card && c.neg && (c.card==="N"||c.card==="E")) warning="Sign conflicts with hemisphere; using the hemisphere indicator."; }
+      const bare=[a,b].find(c=>!c.card);
+      if(bare){ const v=bare.neg?-bare.val:bare.val; if(lat===undefined)lat=v; else if(lon===undefined)lon=v; }
+    } else {
+      // no cardinals: signs + magnitude + order inference
+      const av=a.neg?-a.val:a.val, bv=b.neg?-b.val:b.val;
+      if(Math.abs(av)>90 && Math.abs(bv)<=90){ lon=av; lat=bv; if(preferredOrder==="latlon"){warning="Values appeared reversed and were interpreted as Longitude, Latitude.";} }
+      else if(Math.abs(bv)>90 && Math.abs(av)<=90){ lat=av; lon=bv; }
+      else { // both <=90 : ambiguous -> use preferred order
+        if(preferredOrder==="lonlat"){ lon=av; lat=bv; } else { lat=av; lon=bv; }
+        confidence="ambiguous"; warning=`Interpreted as ${preferredOrder==="lonlat"?"Longitude, Latitude":"Latitude, Longitude"}. Swap if wrong.`;
+      }
+    }
+    if(lat===undefined||lon===undefined) return {error:"could not read lat & lon"};
+    // range fix
+    if(Math.abs(lat)>90 && Math.abs(lon)<=90){ const t=lat;lat=lon;lon=t; warning="Values appeared reversed and were swapped."; }
+    if(Math.abs(lat)>90||Math.abs(lon)>180) return {error:"out of range"};
+    return {lat,lon,warning,confidence,detected:describeLL(a,b)};
+  }
+  function describeLL(a,b){ const dms=a.hasMinSec||b.hasMinSec; const card=a.card||b.card; return `WGS 84 ${dms?"DMS/DDM":"decimal"}${card?" with hemisphere":""}`; }
+
+  // ---- grid split (Singapore-style equal halves). Returns {e,n,d}|{error}
+  function splitGrid(text){
+    let s=String(text).trim().replace(/[,;\/]/g," ").replace(/\s+/g," ").trim();
+    let m=s.match(/^(\d{1,5})\s+(\d{1,5})$/);
+    if(m){ if(m[1].length!==m[2].length) return {error:`unequal groups (${m[1].length}+${m[2].length})`}; return {e:m[1],n:m[2],d:m[1].length}; }
+    m=s.match(/^(\d+)$/);
+    if(m){ const dig=m[1]; if(dig.length%2!==0) return {error:"odd number of digits"}; const d=dig.length/2; if(d<1||d>5) return {error:"too many digits"}; return {e:dig.slice(0,d),n:dig.slice(d),d}; }
+    return {error:"enter matching easting and northing, e.g. 1234 5678"};
+  }
+  // grid E/N strings -> WGS84 (SG). corner anchor, restore leading (omit assumed)
+  function sgToWGS(eStr,nStr,s){ // input is always the omitted military form; restore leading, SW-corner anchor
+    const d=eStr.length, step=Math.pow(10,5-d);
+    const E=LEAD_E*100000 + parseInt(eStr,10)*step;
+    const N=LEAD_N*100000 + parseInt(nStr,10)*step;
+    const r=proj4("EPSG:3168","WGS84",[E,N]); return {lon:r[0],lat:r[1]};
+  }
+
+  // parse two cells for a preset -> {lat,lon}|{error, badA,badB}
+  function parseCells(presetId, a, b, S){
+    const p=PRESETS[presetId], s=S[presetId]||{};
+    a=(a||"").trim(); b=(b||"").trim();
+    if(p.kind==="latlong"){
+      if(!a && !b) return {error:"empty",empty:true};
+      const r=parseLatLon(`${a} ${b}`, s.order==="lonlat"?"lonlat":"latlon");
+      if(r.error) return {error:r.error,badA:true,badB:true};
+      return {lat:r.lat,lon:r.lon,warning:r.warning};
+    }
+    if(p.kind==="grid"){
+      if(!a && !b) return {error:"empty",empty:true};
+      if(!/^\d+$/.test(a)||!/^\d+$/.test(b)) return {error:"digits only",badA:!/^\d+$/.test(a),badB:!/^\d+$/.test(b)};
+      if(a.length!==b.length) return {error:"unequal length",badA:true,badB:true};
+      return sgToWGS(a,b,s);
+    }
+    // utm / projected: two numbers (integer metres)
+    if(!a && !b) return {error:"empty",empty:true};
+    const na=Number(a), nb=Number(b);
+    if(!isFinite(na)||a==="") return {error:"E not a number",badA:true};
+    if(!isFinite(nb)||b==="") return {error:"N not a number",badB:true};
+    return toWGSfromProj(na,nb,p.epsg);
+  }
+
+  /* ============================ GPX ============================ */
+  function xmlEsc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c])); }
+  function safeFilename(name){ return String(name).trim().replace(/\s+/g,"-").replace(/[^A-Za-z0-9._-]/g,"").replace(/^-+|-+$/g,"") || "coordinates"; }
+  function generateGpx(mode, name, points, isoTime){
+    const nm=xmlEsc(name);
+    const head=`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Coordinate Converter" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n  <metadata>\n    <name>${nm}</name>\n    <time>${isoTime}</time>\n  </metadata>\n`;
+    const nameOf=(p,i)=>xmlEsc(p.name && p.name.trim() ? p.name : `Point ${i+1}`);
+    let body="";
+    if(mode==="route"){
+      body+=`  <rte>\n    <name>${nm}</name>\n`;
+      points.forEach((p,i)=>{ body+=`    <rtept lat="${p.lat.toFixed(6)}" lon="${p.lon.toFixed(6)}">\n      <name>${nameOf(p,i)}</name>\n    </rtept>\n`; });
+      body+=`  </rte>\n`;
+    } else {
+      points.forEach((p,i)=>{ body+=`  <wpt lat="${p.lat.toFixed(6)}" lon="${p.lon.toFixed(6)}">\n    <name>${nameOf(p,i)}</name>\n  </wpt>\n`; });
+    }
+    return head+body+`</gpx>\n`;
+  }
+
+  /* ============================ maps ============================ */
+  function pinUrl(lat,lon){ return `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lon.toFixed(6)}`; }
+  function routeUrl(pts){
+    if(pts.length===1) return pinUrl(pts[0].lat,pts[0].lon);
+    const ll=p=>`${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
+    const mids=pts.slice(1,-1).map(ll);
+    let u=`https://www.google.com/maps/dir/?api=1&origin=${ll(pts[0])}&destination=${ll(pts[pts.length-1])}&travelmode=walking`;
+    if(mids.length) u+=`&waypoints=${mids.join("%7C")}`;
+    return u;
+  }
+
+  /* ============================ default settings ============================ */
+  function defaultSettings(){
+    return {
+      wgs84:{ order:"latlon", format:"dd", decimals:6 },
+      sg:{ sgDigits:4, sgOmit:true },
+      taiwan:{}, thailand:{}, brunei:{},
+    };
+  }
+
+  /* ============================ expose for tests ============================ */
+  if(typeof module!=="undefined"){ module.exports={ parseLatLon,splitGrid,sgToWGS,parseCells,formatPoint,generateGpx,xmlEsc,safeFilename,routeUrl,PRESETS,defaultSettings }; }
+
+  /* ============================ UI / state ============================ */
+  if(typeof document!=="undefined") (function(){
+    const $=s=>document.querySelector(s);
+    const STORAGE="mgrconv-v1";
+    let state = loadState();
+    function loadState(){
+      try{ const j=JSON.parse(localStorage.getItem(STORAGE)); if(j&&j.settings) return j; }catch(_){}
+      return { from:"sg", to:"wgs84", rows:[["","",""]], out:null, points:[], settings:defaultSettings() };
+    }
+    function save(){ try{ localStorage.setItem(STORAGE, JSON.stringify(state)); }catch(_){} }
+
+    // build system selects
+    function buildSel(sel){ sel.innerHTML=PRESET_ORDER.map(id=>`<option value="${id}">${PRESETS[id].name}</option>`).join(""); }
+    buildSel($("#fromSys")); buildSel($("#toSys"));
+    $("#fromSys").value=state.from; $("#toSys").value=state.to;
+
+    function detect(msg,cls){ const d=$("#detect"); d.textContent=msg||""; d.className="detect"+(cls?" "+cls:""); }
+    function toast(msg,warn){ const t=$("#toast"); t.textContent=msg; t.className="toast show"+(warn?" warn":""); clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="toast",1600); }
+
+    /* ---- render FROM table ---- */
+    function renderFrom(){
+      const cols=colsFor(state.from,state.settings);
+      $("#fromName").textContent=PRESETS[state.from].name;
+      $("#fromHead").innerHTML=`<span>#</span><span>${cols[0]}</span><span>${cols[1]}</span><span>Name</span><span></span>`;
+      const smart = PRESETS[state.from].kind==="grid" || PRESETS[state.from].kind==="latlong"; // smart paste on for SG + latlong only
+      const rowsEl=$("#fromRows"); rowsEl.innerHTML="";
+      state.rows.forEach((r,i)=>{
+        const div=document.createElement("div"); div.className="trow"; div.dataset.i=i;
+        div.innerHTML=`<span class="n">${i+1}</span>`+
+          `<input class="cell a" value="${escAttr(r[0])}" placeholder="${escAttr(cols[0])}">`+
+          `<input class="cell b" value="${escAttr(r[1])}" placeholder="${escAttr(cols[1])}">`+
+          `<input class="cell nm" value="${escAttr(r[2])}" placeholder="name">`+
+          `<button class="del" aria-label="Delete row">✕</button>`;
+        rowsEl.appendChild(div);
+        div.querySelector(".del").addEventListener("click",()=>{ state.rows.splice(i,1); if(!state.rows.length)state.rows.push(["","",""]); syncRows(); renderFrom(); save(); });
+        const A=div.querySelector(".a"),B=div.querySelector(".b"),NM=div.querySelector(".nm");
+        [A,B,NM].forEach(inp=>inp.addEventListener("input",()=>{ readRows(); save(); }));
+        [A,B].forEach(inp=>inp.addEventListener("blur",()=>{ inp.classList.remove("bad"); }));
+        if(smart){ [A,B].forEach(inp=>inp.addEventListener("paste",e=>onPaste(e,i,inp,A,B))); }
+      });
+    }
+    function escAttr(s){ return String(s==null?"":s).replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+    function readRows(){ state.rows=[...$("#fromRows").children].map(d=>[d.querySelector(".a").value,d.querySelector(".b").value,d.querySelector(".nm").value]); }
+    function syncRows(){ readRows(); }
+
+    /* ---- paste autodetect ---- */
+    function onPaste(e,i,inp,A,B){
+      const text=(e.clipboardData||window.clipboardData).getData("text");
+      if(!text) return;
+      const p=PRESETS[state.from];
+      if(p.kind==="latlong"){
+        const r=parseLatLon(text, (state.settings.wgs84.order==="lonlat")?"lonlat":"latlon");
+        if(r.error){ detect("Latitude/longitude format not recognised.","err"); return; } // keep original
+        e.preventDefault();
+        // place per display order
+        const ord=state.settings.wgs84.order;
+        const cellsVals = ord==="lonlat" ? [fmtLon(r.lon,state.settings.wgs84),fmtLat(r.lat,state.settings.wgs84)] : [fmtLat(r.lat,state.settings.wgs84),fmtLon(r.lon,state.settings.wgs84)];
+        setPair(A,B,cellsVals[0],cellsVals[1]);
+        detect("Detected: "+r.detected+(r.warning?(" — "+r.warning):""), r.warning?"warn":"");
+        readRows(); save();
+      } else if(p.kind==="grid"){
+        const g=splitGrid(text);
+        if(g.error){ detect("Enter matching easting and northing groups, such as 1234 5678.","err"); return; }
+        e.preventDefault();
+        setPair(A,B,g.e,g.n);
+        detect(`Detected: ${g.d}+${g.d} grid reference`,"");
+        readRows(); save();
+      }
+    }
+    function setPair(A,B,va,vb){ A.value=va; B.value=vb; A.classList.add("flash"); B.classList.add("flash"); setTimeout(()=>{A.classList.remove("flash");B.classList.remove("flash");},800); }
+
+    /* ---- convert ---- */
+    function convert(){
+      readRows();
+      const pts=[]; let bad=false;
+      const rowsEl=$("#fromRows").children;
+      state.rows.forEach((r,i)=>{
+        const rowEl=rowsEl[i]; const A=rowEl.querySelector(".a"), B=rowEl.querySelector(".b");
+        A.classList.remove("bad"); B.classList.remove("bad");
+        if(!r[0].trim() && !r[1].trim() && !r[2].trim()) return; // skip fully empty
+        const res=parseCells(state.from, r[0], r[1], state.settings);
+        if(res.error){ if(res.empty && !r[2].trim()) return; bad=true; if(res.badA!==false)A.classList.add("bad"); if(res.badB!==false)B.classList.add("bad"); return; }
+        pts.push({lat:res.lat,lon:res.lon,name:r[2].trim()});
+      });
+      if(bad){ detect("Some rows could not be read — fix the highlighted fields.","err"); return; }
+      if(!pts.length){ detect("Enter at least one coordinate.","err"); return; }
+      detect("");
+      state.points=pts;
+      renderTo();
+      save();
+    }
+
+    function renderTo(){
+      const cols=colsFor(state.to,state.settings);
+      $("#toName").textContent=PRESETS[state.to].name;
+      $("#toHead").innerHTML=`<span>#</span><span>${cols[0]}</span><span>${cols[1]}</span><span>Name</span><span></span>`;
+      const rowsEl=$("#toRows"); rowsEl.innerHTML="";
+      (state.points||[]).forEach((p,i)=>{
+        const [a,b]=formatPoint(p.lat,p.lon,state.to,state.settings);
+        const div=document.createElement("div"); div.className="trow out";
+        div.innerHTML=`<span class="n">${i+1}</span>`+
+          `<input class="cell a" readonly value="${escAttr(a)}">`+
+          `<input class="cell b" readonly value="${escAttr(b)}">`+
+          `<input class="cell nm" readonly value="${escAttr(p.name||"")}">`+
+          `<button class="del"></button>`;
+        rowsEl.appendChild(div);
+      });
+      const has=(state.points||[]).length>0;
+      $("#mapsBtn").disabled=!has; $("#gpxBtn").disabled=!has; $("#copyBtn").disabled=!has;
+    }
+
+    /* ---- swap ---- */
+    $("#swapBtn").addEventListener("click",()=>{
+      const nf=state.to, nt=state.from;
+      // move converted results into FROM (as new-from = old-to system)
+      const pts=state.points||[];
+      state.from=nf; state.to=nt;
+      $("#fromSys").value=nf; $("#toSys").value=nt;
+      if(pts.length){ state.rows=pts.map(p=>{ const [a,b]=formatPoint(p.lat,p.lon,nf,state.settings); return [a,b,p.name||""]; }); }
+      state.points=[]; renderFrom(); renderTo(); detect(""); save();
+    });
+
+    $("#fromSys").addEventListener("change",e=>{ state.from=e.target.value; state.rows=[["","",""]]; state.points=[]; renderFrom(); renderTo(); detect(""); save(); });
+    $("#toSys").addEventListener("change",e=>{ state.to=e.target.value; if(state.points&&state.points.length) renderTo(); else renderTo(); save(); });
+    $("#addRow").addEventListener("click",()=>{ readRows(); state.rows.push(["","",""]); renderFrom(); save(); });
+    $("#convertBtn").addEventListener("click",convert);
+
+    /* ---- exports ---- */
+    $("#mapsBtn").addEventListener("click",()=>{ if(!state.points||!state.points.length)return; window.open(routeUrl(state.points),"_blank","noopener"); });
+    $("#copyBtn").addEventListener("click",()=>{
+      if(!state.points||!state.points.length)return;
+      const text=state.points.map(p=>{ const [a,b]=formatPoint(p.lat,p.lon,state.to,state.settings); return p.name?`${a}  ${b}  ${p.name}`:`${a}  ${b}`; }).join("\n");
+      navigator.clipboard.writeText(text).then(()=>toast("Copied "+state.points.length+" points")).catch(()=>toast("Copy failed",true));
+    });
+
+    /* ---- GPX modal ---- */
+    let gpxMode="points";
+    function openGpx(){ if(!state.points||!state.points.length)return; $("#gpxName").value=""; updateGpxNote(); $("#gpxOverlay").classList.add("open"); $("#gpxName").focus(); }
+    function closeGpx(){ $("#gpxOverlay").classList.remove("open"); }
+    function updateGpxNote(){
+      const n=(state.points||[]).length;
+      let msg=""; let ok=$("#gpxName").value.trim().length>0 && n>0;
+      if(gpxMode==="route" && n<2){ msg="A route requires at least two points."; ok=false; }
+      $("#gpxNote").textContent = msg || `${n} point${n!==1?"s":""} • WGS 84 decimal degrees`;
+      $("#gpxDownload").disabled=!ok;
+    }
+    $("#gpxBtn").addEventListener("click",openGpx);
+    $("#gpxCancel").addEventListener("click",closeGpx);
+    $("#gpxOverlay").addEventListener("click",e=>{ if(e.target.id==="gpxOverlay")closeGpx(); });
+    $("#gpxName").addEventListener("input",updateGpxNote);
+    $("#gpxMode").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; gpxMode=b.dataset.m; [...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b)); updateGpxNote(); });
+    $("#gpxDownload").addEventListener("click",()=>{
+      const name=$("#gpxName").value.trim(); if(!name)return;
+      const pts=state.points||[]; if(gpxMode==="route"&&pts.length<2)return;
+      const xml=generateGpx(gpxMode,name,pts,new Date().toISOString());
+      const blob=new Blob([xml],{type:"application/gpx+xml;charset=utf-8"});
+      const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=safeFilename(name)+".gpx"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      closeGpx(); toast("GPX downloaded");
+    });
+
+    /* ---- tabs ---- */
+    $("#tab-conv").addEventListener("click",()=>switchTab("conv"));
+    $("#tab-set").addEventListener("click",()=>switchTab("set"));
+    function switchTab(t){
+      $("#tab-conv").classList.toggle("on",t==="conv"); $("#tab-set").classList.toggle("on",t==="set");
+      $("#view-conv").classList.toggle("on",t==="conv"); $("#view-set").classList.toggle("on",t==="set");
+      if(t==="set") renderSettings();
+    }
+
+    /* ---- settings ---- */
+    function renderSettings(){
+      const S=state.settings; const el=$("#view-set");
+      const seg=(opts,cur,cb)=>{ const id="seg"+Math.random().toString(36).slice(2); setTimeout(()=>{ const g=document.getElementById(id); if(!g)return; g.addEventListener("click",e=>{const b=e.target.closest("button"); if(!b)return; [...g.children].forEach(x=>x.classList.toggle("on",x===b)); cb(b.dataset.v); }); },0); return `<div class="seg" id="${id}">${opts.map(o=>`<button data-v="${o[0]}" class="${String(cur)===String(o[0])?"on":""}">${o[1]}</button>`).join("")}</div>`; };
+      let html="";
+      // WGS84
+      html+=`<div class="sgroup"><h3>WGS 84 Lat/Long</h3>`;
+      html+=`<div class="srow"><span class="k">Order</span>${seg([["latlon","Lat, Long"],["lonlat","Long, Lat"]],S.wgs84.order,v=>{S.wgs84.order=v;save();refreshTables();})}</div>`;
+      html+=`<div class="srow"><span class="k">Format</span>${seg([["dd","Decimal"],["ddm","Deg + Min"],["dms","D M S"]],S.wgs84.format,v=>{S.wgs84.format=v;save();refreshTables();updateWgsExample();})}</div>`;
+      html+=`<div class="srow"><span class="k">Decimal places (decimal format)</span>${seg([[4,"4"],[5,"5"],[6,"6"],[7,"7"]],S.wgs84.decimals,v=>{S.wgs84.decimals=+v;save();refreshTables();updateWgsExample();})}</div>`;
+      html+=`<div class="example" id="wgsEx"></div></div>`;
+      // Singapore
+      html+=`<div class="sgroup"><h3>Singapore MGR</h3>`;
+      html+=`<div class="srow"><span class="k">Digits per axis (precision)</span>${seg([[5,"5 (1 m)"],[4,"4 (10 m)"],[3,"3 (100 m)"],[2,"2 (1 km)"]],S.sg.sgDigits,v=>{S.sg.sgDigits=+v;save();refreshTables();updateSgExample();})}</div>`;
+      html+=`<label class="chk"><input type="checkbox" id="sgOmit" ${S.sg.sgOmit?"checked":""}> Omit leading grid digit</label>`;
+      html+=`<div class="example" id="sgEx"></div></div>`;
+      // UTM / Brunei
+      html+=`<div class="sgroup"><h3>Taiwan / Thailand / Brunei</h3><div class="note">Reported as full projected easting / northing (integer metres), no zone code. Taiwan = UTM 51N, Thailand = UTM 47N. Brunei is a custom Timbalai grid <b>*unverified</b> (no ground-truth check point).</div></div>`;
+      el.innerHTML=html;
+      $("#sgOmit").addEventListener("change",e=>{ S.sg.sgOmit=e.target.checked; save(); refreshTables(); updateSgExample(); });
+      updateWgsExample(); updateSgExample();
+    }
+    function updateWgsExample(){ const S=state.settings.wgs84; const ex=document.getElementById("wgsEx"); if(!ex)return; const la=fmtLat(1.352083,S),lo=fmtLon(103.819836,S); ex.innerHTML="Example: <b>"+(S.order==="lonlat"?lo+"   "+la:la+"   "+lo)+"</b>"; }
+    function updateSgExample(){ const S=state.settings.sg; const ex=document.getElementById("sgEx"); if(!ex)return; const [a,b]=sgHalvesEN(634821,152074,S); ex.innerHTML="Underlying 34821 52074 → <b>"+a+" "+b+"</b>"; }
+
+    function refreshTables(){ renderFrom(); if(state.points&&state.points.length) renderTo(); }
+
+    /* ---- force update (keeps localStorage => keeps coords+settings) ---- */
+    $("#refresh").addEventListener("click",async()=>{
+      save();
+      try{ if("serviceWorker" in navigator){ const rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r=>r.unregister())); } if(window.caches){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); } }catch(_){}
+      const u=new URL(location.href); u.searchParams.set("fresh",Date.now()); location.replace(u.toString());
+    });
+    if(location.search.includes("fresh=")){ const u=new URL(location.href); u.searchParams.delete("fresh"); history.replaceState(null,"",u.pathname+u.search+u.hash); }
+
+    if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+
+    // initial render
+    renderFrom(); renderTo();
+  })();
+  </script>
+</body>
+</html>
